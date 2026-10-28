@@ -14,6 +14,7 @@ const LARGE_DIFF_ROWS = 600;
 const CHEVRON = `<svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 6.2 8 9.8l3.5-3.6"/></svg>`;
 const EXPAND = `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 4.8 6 2.5l2.5 2.3M3.5 7.2 6 9.5l2.5-2.3"/></svg>`;
 const EXTERNAL = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 2.5h4v4M13.5 2.5 7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3"/></svg>`;
+const COMMENT = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 2.5h11v8h-6l-3.5 3v-3H2.5z"/></svg>`;
 
 const WARN = `<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.8 14.6 13.5H1.4L8 1.8Z"/><path d="M8 6.3v3.2M8 11.6v.1"/></svg>`;
 
@@ -23,25 +24,40 @@ const INTERACTIVE_CSS = String.raw`
   font-size: 13px; transition: border-color .15s, background .15s;
 }
 .gpr-comment:hover { border-color: var(--line-strong); background: var(--pill-hover); }
-.diff .cd { position: relative; }
-.gpr-line-actions {
-  position: absolute; top: 1px; right: 5px; display: flex; gap: 4px; padding-left: 18px;
-  background: linear-gradient(90deg, transparent, var(--card) 18px); opacity: 0; transition: opacity .12s;
+.diff col.gpr-act { width: 34px; }
+.diff .gpr-act-cell {
+  position: sticky; left: 0; z-index: 1; width: 34px; min-width: 34px; text-align: center; background: var(--card);
 }
-.diff tr.add .gpr-line-actions { background: linear-gradient(90deg, transparent, var(--add-bg) 18px); }
-.diff tr.del .gpr-line-actions { background: linear-gradient(90deg, transparent, var(--del-bg) 18px); }
-.diff tr:hover .gpr-line-actions, .gpr-line-actions:focus-within { opacity: 1; }
-.gpr-line-actions button {
-  border: 1px solid var(--line-strong); background: var(--card); color: var(--text-2); border-radius: 6px;
-  padding: 1px 7px; font: 11.5px/19px var(--sans); cursor: pointer;
+.diff tr.add .gpr-act-cell { background: var(--add-bg); }
+.diff tr.del .gpr-act-cell { background: var(--del-bg); }
+.gpr-line-trigger {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0;
+  color: var(--muted); background: transparent; border: 0; border-radius: 6px; cursor: pointer; opacity: .6;
 }
-.gpr-line-actions button:hover { border-color: var(--faint); background: var(--pill-hover); }
+.gpr-line-trigger:hover, .gpr-line-trigger:focus-visible { color: var(--text); background: var(--pill-hover); opacity: 1; }
+.gpr-line-trigger:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.gpr-line-trigger svg { width: 15px; height: 15px; }
 .gpr-dialog {
   width: min(620px, calc(100vw - 32px)); color: var(--text); background: var(--card); border: 1px solid var(--line-strong);
   border-radius: 12px; box-shadow: 0 16px 50px rgba(20,20,15,.2); padding: 20px;
 }
 .gpr-dialog::backdrop { background: rgba(20,20,15,.42); }
-.gpr-dialog h3 { margin: 0 0 12px; font-size: 18px; }
+.gpr-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.gpr-dialog h3 { margin: 0; font-size: 18px; }
+.gpr-dialog-close {
+  display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 7px;
+  color: var(--muted); background: transparent; font: 22px/1 var(--sans); cursor: pointer;
+}
+.gpr-dialog-close:hover { color: var(--text); background: var(--pill-hover); }
+.gpr-line-menu { width: min(360px, calc(100vw - 32px)); }
+.gpr-line-choices { display: grid; gap: 8px; }
+.gpr-line-choice {
+  display: flex; flex-direction: column; gap: 3px; width: 100%; padding: 12px 14px; text-align: left;
+  color: var(--text); background: var(--card-soft); border: 1px solid var(--line); border-radius: 9px; cursor: pointer;
+}
+.gpr-line-choice:hover { border-color: var(--line-strong); background: var(--pill-hover); }
+.gpr-line-choice strong { font: 600 14px var(--sans); }
+.gpr-line-choice span { color: var(--muted); font: 12.5px/1.4 var(--sans); }
 .gpr-dialog textarea {
   width: 100%; min-height: 96px; resize: vertical; padding: 10px 12px; color: var(--text); background: var(--card-soft);
   border: 1px solid var(--line-strong); border-radius: 8px; font: 14px/1.5 var(--sans);
@@ -53,7 +69,6 @@ const INTERACTIVE_CSS = String.raw`
   border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.22); opacity: 0; transform: translateY(10px); transition: .18s; pointer-events: none;
 }
 .gpr-toast.show { opacity: 1; transform: none; }
-@media (max-width: 560px) { .gpr-line-actions { position: static; opacity: 1; display: inline-flex; margin-left: 12px; background: transparent !important; } }
 `;
 
 const INTERACTIVE_JS = String.raw`
@@ -64,6 +79,7 @@ const INTERACTIVE_JS = String.raw`
   const askDialog = document.getElementById('gpr-ask-dialog');
   const commentDialog = document.getElementById('gpr-comment-dialog');
   const prDialog = document.getElementById('gpr-pr-dialog');
+  const lineDialog = document.getElementById('gpr-line-dialog');
   const toast = document.getElementById('gpr-toast');
   const notify = (message) => {
     toast.textContent = message;
@@ -77,19 +93,39 @@ const INTERACTIVE_JS = String.raw`
     return data;
   };
   document.addEventListener('click', (event) => {
-    const ask = event.target.closest('[data-gpr-ask]');
-    const comment = event.target.closest('[data-gpr-comment]');
-    if (ask) {
-      selected = lines[Number(ask.dataset.gprAsk)];
+    const line = event.target.closest('[data-gpr-line]');
+    const action = event.target.closest('[data-gpr-action]');
+    if (line) {
+      selected = lines[Number(line.dataset.gprLine)];
+      lineDialog.showModal();
+    }
+    if (action?.dataset.gprAction === 'ask') {
+      lineDialog.close();
       document.getElementById('gpr-answer').hidden = true;
       askDialog.showModal();
     }
-    if (comment) {
-      selected = lines[Number(comment.dataset.gprComment)];
+    if (action?.dataset.gprAction === 'comment') {
+      lineDialog.close();
       document.getElementById('gpr-comment-text').value = '';
       commentDialog.showModal();
     }
   });
+  [lineDialog, askDialog, commentDialog, prDialog].forEach((dialog) => {
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+  });
+  const submitOnEnter = (textareaId, buttonId) => {
+    document.getElementById(textareaId).addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+        event.preventDefault();
+        document.getElementById(buttonId).click();
+      }
+    });
+  };
+  submitOnEnter('gpr-ask-text', 'gpr-ask-submit');
+  submitOnEnter('gpr-comment-text', 'gpr-comment-submit');
+  submitOnEnter('gpr-pr-text', 'gpr-pr-submit');
   document.getElementById('gpr-pr-comment').addEventListener('click', () => {
     document.getElementById('gpr-pr-text').value = '';
     prDialog.showModal();
@@ -225,16 +261,17 @@ export function renderHtml(pr, analysis, opts = {}) {
     return rows
       .map((r, i) => {
         const sign = r.type === 'add' ? '+' : r.type === 'del' ? '−' : '';
-        let actions = '';
+        let action = '';
         if (interactive) {
           const key = interactionLines.length;
           const side = r.type === 'del' ? 'LEFT' : 'RIGHT';
           const line = r.type === 'del' ? r.old : r.new;
           const context = rows.slice(Math.max(0, i - 3), i + 4).map((row) => `${row.type === 'add' ? '+' : row.type === 'del' ? '-' : ' '} ${row.text}`).join('\n');
           interactionLines.push({ path, side, line, code: r.text, context });
-          actions = `<span class="gpr-line-actions"><button data-gpr-ask="${key}">Ask</button><button data-gpr-comment="${key}">Comment</button></span>`;
+          action = `<button type="button" class="gpr-line-trigger" data-gpr-line="${key}" aria-label="Open line actions" aria-haspopup="dialog" aria-controls="gpr-line-dialog">${COMMENT}</button>`;
         }
-        return `<tr class="${r.type}"><td class="ln">${r.old ?? ''}</td><td class="ln">${r.new ?? ''}</td><td class="sg">${sign}</td><td class="cd">${html[i] || ' '}${actions}</td></tr>`;
+        const actionCell = opts.interactive ? `<td class="gpr-act-cell">${action}</td>` : '';
+        return `<tr class="${r.type}">${actionCell}<td class="ln">${r.old ?? ''}</td><td class="ln">${r.new ?? ''}</td><td class="sg">${sign}</td><td class="cd">${html[i] || ' '}</td></tr>`;
       })
       .join('');
   };
@@ -248,11 +285,13 @@ export function renderHtml(pr, analysis, opts = {}) {
         const id = `g${++gapSeq}`;
         const pos = i === 0 ? ' first' : i === segs.length - 1 ? ' last' : '';
         const label = `${s.count} unmodified line${s.count === 1 ? '' : 's'}`;
-        if (!s.rows) return `<tbody><tr class="gap${pos}"><td colspan="4"><button class="gapbtn" disabled>${label}</button></td></tr></tbody>`;
-        return `<tbody><tr class="gap${pos}"><td colspan="4"><button class="gapbtn" data-gap="${id}">${EXPAND}${label}</button></td></tr></tbody><tbody class="gaprows" data-gaprows="${id}">${diffRows(s.rows, lang, f.path)}</tbody>`;
+        const colspan = opts.interactive ? 5 : 4;
+        if (!s.rows) return `<tbody><tr class="gap${pos}"><td colspan="${colspan}"><button class="gapbtn" disabled>${label}</button></td></tr></tbody>`;
+        return `<tbody><tr class="gap${pos}"><td colspan="${colspan}"><button class="gapbtn" data-gap="${id}">${EXPAND}${label}</button></td></tr></tbody><tbody class="gaprows" data-gaprows="${id}">${diffRows(s.rows, lang, f.path)}</tbody>`;
       })
       .join('');
-    return `<div class="fbody diff-scroll"><table class="diff"><colgroup><col class="ln"><col class="ln"><col class="sg"><col></colgroup>${body}</table></div>`;
+    const actionCol = opts.interactive ? '<col class="gpr-act">' : '';
+    return `<div class="fbody diff-scroll"><table class="diff"><colgroup>${actionCol}<col class="ln"><col class="ln"><col class="sg"><col></colgroup>${body}</table></div>`;
   };
 
   const fileCard = (f) => {
@@ -361,9 +400,10 @@ ${body}</div>`;
 ${banner}
 <main class="wrap">${overview}${guide}${diff}
 <footer class="foot"><span>Generated by <a href="https://github.com/heyitsaamir/a-stack/tree/main/skills/guided-pr-review">guided-pr-review</a> · ${genLabel}${opts.generatedAt ? ` · ${esc(opts.generatedAt)}` : ''}</span><span class="kbd-help"><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> tabs · <kbd>j</kbd> <kbd>k</kbd> chapters</span></footer></main>
-${opts.interactive ? `<dialog class="gpr-dialog" id="gpr-ask-dialog"><form method="dialog"><h3>Ask Copilot about this line</h3><textarea id="gpr-ask-text">What should I understand about this line?</textarea><div class="gpr-answer" id="gpr-answer" hidden></div><div class="gpr-dialog-actions"><button value="cancel">Close</button><button value="default" id="gpr-ask-submit">Ask Copilot</button></div></form></dialog>
-<dialog class="gpr-dialog" id="gpr-comment-dialog"><form method="dialog"><h3>Comment on this PR line</h3><textarea id="gpr-comment-text" placeholder="Write an inline review comment…"></textarea><div class="gpr-dialog-actions"><button value="cancel">Cancel</button><button value="default" id="gpr-comment-submit">Post comment</button></div></form></dialog>
-<dialog class="gpr-dialog" id="gpr-pr-dialog"><form method="dialog"><h3>Comment on this pull request</h3><textarea id="gpr-pr-text" placeholder="Write a general PR comment…"></textarea><div class="gpr-dialog-actions"><button value="cancel">Cancel</button><button value="default" id="gpr-pr-submit">Post comment</button></div></form></dialog>
+${opts.interactive ? `<dialog class="gpr-dialog gpr-line-menu" id="gpr-line-dialog" aria-labelledby="gpr-line-title"><form method="dialog"><div class="gpr-dialog-head"><h3 id="gpr-line-title">Line actions</h3><button class="gpr-dialog-close" value="cancel" aria-label="Close line actions">×</button></div><div class="gpr-line-choices"><button type="button" class="gpr-line-choice" data-gpr-action="ask"><strong>Ask Copilot</strong><span>Ask a focused question about this line.</span></button><button type="button" class="gpr-line-choice" data-gpr-action="comment"><strong>Comment</strong><span>Post an inline GitHub review comment.</span></button></div></form></dialog>
+<dialog class="gpr-dialog" id="gpr-ask-dialog"><form method="dialog"><div class="gpr-dialog-head"><h3>Ask Copilot about this line</h3><button class="gpr-dialog-close" value="cancel" aria-label="Close Ask Copilot">×</button></div><textarea id="gpr-ask-text">What should I understand about this line?</textarea><div class="gpr-answer" id="gpr-answer" hidden></div><div class="gpr-dialog-actions"><button value="cancel">Close</button><button value="default" id="gpr-ask-submit">Ask Copilot</button></div></form></dialog>
+<dialog class="gpr-dialog" id="gpr-comment-dialog"><form method="dialog"><div class="gpr-dialog-head"><h3>Comment on this PR line</h3><button class="gpr-dialog-close" value="cancel" aria-label="Close line comment">×</button></div><textarea id="gpr-comment-text" placeholder="Write an inline review comment…"></textarea><div class="gpr-dialog-actions"><button value="cancel">Cancel</button><button value="default" id="gpr-comment-submit">Post comment</button></div></form></dialog>
+<dialog class="gpr-dialog" id="gpr-pr-dialog"><form method="dialog"><div class="gpr-dialog-head"><h3>Comment on this pull request</h3><button class="gpr-dialog-close" value="cancel" aria-label="Close pull request comment">×</button></div><textarea id="gpr-pr-text" placeholder="Write a general PR comment…"></textarea><div class="gpr-dialog-actions"><button value="cancel">Cancel</button><button value="default" id="gpr-pr-submit">Post comment</button></div></form></dialog>
 <div class="gpr-toast" id="gpr-toast"></div>` : ''}
 ${peleViewer}
 <script type="application/json" id="gpr-data">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>
