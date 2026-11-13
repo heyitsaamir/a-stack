@@ -12,6 +12,13 @@
       "source": "./skills/guided-pr-review",
       "category": "productivity",
       "tags": ["pull-request", "code-review", "canvas"]
+    },
+    {
+      "name": "in-your-own-words",
+      "description": "Have the agent restate your goals and the problem in its own words, so you can check it understood you.",
+      "source": "./skills/in-your-own-words",
+      "category": "productivity",
+      "tags": ["alignment", "clarification"]
     }
   ]
 }
