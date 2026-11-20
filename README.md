@@ -24,6 +24,8 @@ Start a fresh Copilot session after installing or updating a skill.
 |---|---|
 | [`guided-pr-review`](skills/guided-pr-review/) | Turn a pull request into an interactive Overview, chaptered Guide, and Diff. |
 | [`in-your-own-words`](skills/in-your-own-words/) | Have the agent restate your goals and problem so you can check it understood you. Run with `/in-your-own-words`. |
+| [`aamir-mode`](skills/aamir-mode/) | My engineering principles, applied to a task. Run with `/aamir-mode`. Local only, not in the marketplace. |
+| [`add-principle`](skills/add-principle/) | Add, refine, or mine my history for `aamir-mode` principles. Inspired by pstack's `automate-me`. Local only. |
 
 ## Credits
 
