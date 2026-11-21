@@ -26,6 +26,7 @@ Start a fresh Copilot session after installing or updating a skill.
 | [`in-your-own-words`](skills/in-your-own-words/) | Have the agent restate your goals and problem so you can check it understood you. Run with `/in-your-own-words`. |
 | [`aamir-mode`](skills/aamir-mode/) | My engineering principles, applied to a task. Run with `/aamir-mode`. Local only, not in the marketplace. |
 | [`add-principle`](skills/add-principle/) | Add, refine, or mine my history for `aamir-mode` principles. Inspired by pstack's `automate-me`. Local only. |
+| [`architect`](skills/architect/) | Sketch types and module boundaries before code: two parallel runners design different shapes, then merge, sign off, and implement. Adapted from pstack's `architect`. |
 
 ## Credits
 
